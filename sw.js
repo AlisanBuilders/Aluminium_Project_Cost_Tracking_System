@@ -1,5 +1,5 @@
 // Caches the app shell so the PWA opens instantly. Data calls to Apps Script are never cached.
-const CACHE = 'alisan-shell-v5';
+const CACHE = 'alisan-shell-v6';
 const SHELL = ['./', './index.html', './config.js', './styles.css', './app.js', './manifest.json',
   './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];
 
