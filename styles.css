@@ -40,3 +40,5 @@ dialog{border:0;border-radius:10px;padding:22px;width:min(640px,94vw);box-shadow
 :focus-visible{outline:2px solid var(--blue);outline-offset:1px}
 @media(max-width:860px){body{display:block}aside{width:auto;height:auto;position:static;display:flex;flex-direction:row;gap:8px;align-items:center;flex-wrap:wrap;padding:10px}.brand{margin:0}nav{display:flex;gap:4px}.me{margin:0 0 0 auto}main{padding:16px}.two{grid-template-columns:1fr}}
 @media print{aside,.tools,.noprint,td button{display:none!important}body{background:#fff}main{padding:0}}
+
+button:disabled,input:disabled,select:disabled{opacity:.5;cursor:not-allowed}input:disabled{background:#EDF0F3}
