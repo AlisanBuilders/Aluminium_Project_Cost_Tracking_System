@@ -42,3 +42,19 @@ dialog{border:0;border-radius:10px;padding:22px;width:min(640px,94vw);box-shadow
 @media print{aside,.tools,.noprint,td button{display:none!important}body{background:#fff}main{padding:0}}
 
 button:disabled,input:disabled,select:disabled{opacity:.5;cursor:not-allowed}input:disabled{background:#EDF0F3}
+
+/* ---- reports ---- */
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:9px 14px;color:var(--mut);margin-bottom:-1px}
+.tabs button.on{border-color:var(--red);color:var(--ink);font-weight:600}
+.rtools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}.rtools select,.rtools input{width:auto}.rtools label{font-size:12px;color:var(--mut);display:flex;align-items:center;gap:6px}
+.rtools button{background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 14px}.rtools button.primary{background:var(--red);color:#fff;border:0;font-weight:600}
+.rpt{background:#fff;border:1px solid var(--line);border-radius:10px;padding:24px;max-width:900px}
+.rh{display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:3px solid var(--red);padding-bottom:12px;flex-wrap:wrap}
+.rh img{max-height:52px;max-width:200px}.rh b{font:700 24px 'Bricolage Grotesque';color:var(--red)}.rh h2{margin:0;font-size:20px;text-align:right}.rh small{display:block;text-align:right;color:var(--mut)}
+.rpt h3{font-size:15px;color:var(--blue);margin:22px 0 8px}
+.kv{margin-bottom:10px;display:grid;grid-template-columns:150px 1fr;gap:5px 14px}.kv span{color:var(--mut)}
+.rprog{display:flex;align-items:center;gap:12px;margin-bottom:10px}.rbar{flex:1;height:12px;border-radius:6px;background:#E6EBEF;overflow:hidden}.rbar i{display:block;height:100%;background:var(--ok)}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px}.chips .tile{min-width:110px}
+@media(max-width:600px){.kv{grid-template-columns:110px 1fr}.rpt{padding:14px}}
+@media print{.rpt{border:0;padding:0;max-width:none}}
