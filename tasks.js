@@ -97,7 +97,7 @@ function editTask(id) {
 function vTasks() {
   const op = openTasks(), dn = (D.tasks || []).filter(t => t.Status === 'Done').sort((a, b) => String(b.DoneDate).localeCompare(String(a.DoneDate)));
   const tabs = `<div class="tabs noprint"><button class="${TF.tab === 'open' ? 'on' : ''}" onclick="TF.tab='open';render()">Open (${op.length})</button><button class="${TF.tab === 'done' ? 'on' : ''}" onclick="TF.tab='done';render()">Completed (${dn.length})</button></div>`;
-  const head = `<div class="head"><h1>Tasks</h1><button class="primary" onclick="editTask()">New task</button></div>`;
+  const head = `<div class="head"><h1>Tasks scheduled</h1><button class="primary" onclick="editTask()">New task</button></div>`;
   const rbox = ME && ME.role === 'Admin' ? `<div class="rbox" id="rbox"><span class="muted">Checking email reminders...</span></div>` : '';
   let body;
   if (TF.tab === 'done') {
