@@ -25,7 +25,8 @@ function cData(p) {
   const cats = D.cats.concat(Object.keys(c.by).filter(k => !D.cats.includes(k)));
   const groups = cats.map(k => {
     const L = c.L.filter(l => l.Category === k && (N(l.ActQty) > 0 || N(l.ActQty) * N(l.ActRate) > 0))
-      .map(l => ({ item: l.Description, unit: l.Unit, qty: N(l.ActQty), rate: N(l.ActRate), amt: N(l.ActQty) * N(l.ActRate) }));
+      .sort((a, b) => String(a.SubCategory || '').localeCompare(String(b.SubCategory || '')))
+      .map(l => ({ sub: String(l.SubCategory || '').trim(), item: l.Description, unit: l.Unit, qty: N(l.ActQty), rate: N(l.ActRate), amt: N(l.ActQty) * N(l.ActRate) }));
     return { cat: k, L, sub: L.reduce((a, x) => a + x.amt, 0) };
   }).filter(g => g.L.length);
   const pay = D.payments.filter(x => x.ProjectID === p.ID).slice().sort((a, b) => String(a.Date).localeCompare(String(b.Date)));
@@ -73,7 +74,7 @@ function rHead(title, sub) {
 
 function cHtml(d) {
   const { p, c } = d, kv = (k, v) => `<span>${k}</span><b>${esc(v) || '-'}</b>`;
-  const mats = d.groups.length ? `<div class="wrap"><table><tr><th>Item</th><th>Unit</th><th class="n">Qty used</th><th class="n">Rate (KES)</th><th class="n">Amount (KES)</th></tr>${d.groups.map(g => `<tr class="cat"><td colspan="4">${esc(g.cat)}</td><td class="n">${money(g.sub)}</td></tr>` + g.L.map(l => `<tr><td>${esc(l.item)}</td><td>${esc(l.unit)}</td><td class="n">${qtyS(l.qty)}</td><td class="n">${money(l.rate)}</td><td class="n">${money(l.amt)}</td></tr>`).join('')).join('')}<tr class="cat"><td colspan="4">Total expenses to date</td><td class="n">${money(d.spent)}</td></tr></table></div>` : '<p class="muted">No materials or costs have been recorded yet.</p>';
+  const mats = d.groups.length ? `<div class="wrap"><table><tr><th>Item</th><th>Unit</th><th class="n">Qty used</th><th class="n">Rate (KES)</th><th class="n">Amount (KES)</th></tr>${d.groups.map(g => `<tr class="cat"><td colspan="4">${esc(g.cat)}</td><td class="n">${money(g.sub)}</td></tr>` + g.L.map((l, i) => (l.sub && (i === 0 || g.L[i - 1].sub !== l.sub) ? `<tr><td colspan="5" class="muted"><i>${esc(l.sub)}</i></td></tr>` : '') + `<tr><td>${esc(l.item)}</td><td>${esc(l.unit)}</td><td class="n">${qtyS(l.qty)}</td><td class="n">${money(l.rate)}</td><td class="n">${money(l.amt)}</td></tr>`).join('')).join('')}<tr class="cat"><td colspan="4">Total expenses to date</td><td class="n">${money(d.spent)}</td></tr></table></div>` : '<p class="muted">No materials or costs have been recorded yet.</p>';
   return `<div class="rpt">${rHead('Project Summary Report', 'Prepared ' + nowStr())}
 <h3>Project details</h3><div class="kv">${kv('Project', p.Name)}${kv('Client', p.Client)}${kv('Location', p.Location)}${kv('Project type', p.Type)}${kv('Project ID', p.ID)}${kv('Status', p.Status)}${kv('Start date', fdate(p.StartDate))}${kv('Target completion', fdate(p.EndDate))}</div>
 <h3>Progress</h3><div class="rprog"><div class="rbar"><i style="width:${d.pr}%"></i></div><b>${d.pr}% complete</b></div>
@@ -206,7 +207,7 @@ async function cPdf(d) {
   H2(g, 'Materials utilised and expenses');
   if (d.groups.length) {
     const rows = [];
-    d.groups.forEach(gr => { rows.push({ g: gr.cat }); gr.L.forEach(l => rows.push([l.item, l.unit, qtyS(l.qty), money(l.rate), money(l.amt)])); rows.push({ cells: ['Subtotal - ' + gr.cat, '', '', '', money(gr.sub)], b: 1 }); });
+    d.groups.forEach(gr => { rows.push({ g: gr.cat }); gr.L.forEach((l, i) => { if (l.sub && (i === 0 || gr.L[i - 1].sub !== l.sub)) rows.push({ cells: [l.sub, '', '', '', ''], b: 1, c: MUT }); rows.push([l.item, l.unit, qtyS(l.qty), money(l.rate), money(l.amt)]); }); rows.push({ cells: ['Subtotal - ' + gr.cat, '', '', '', money(gr.sub)], b: 1 }); });
     rows.push({ cells: ['Total expenses to date', '', '', '', 'KES ' + money(d.spent)], b: 1, fill: SOFT });
     ptbl(g, { cols: [{ h: 'Item', w: 40 }, { h: 'Unit', w: 10 }, { h: 'Qty used', w: 14, al: 'r' }, { h: 'Rate (KES)', w: 16, al: 'r' }, { h: 'Amount (KES)', w: 20, al: 'r' }], rows });
   } else note(g, 'No materials or costs have been recorded yet.');
