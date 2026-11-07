@@ -1,5 +1,5 @@
 /* ===================== REPORTS =====================
- * 1. Client project report  - per project: details, progress, scope of works (with current stage), payments.
+ * 1. Client project report  - per project: details, progress, scope of works (with progress remarks), payments.
  *    Costs, materials and margins are deliberately NOT shown in this report.
  * 2. Management summary     - all projects undertaken, cost and profit/loss analysis.
  * Both can be previewed here, downloaded as PDF, and shared (where the device supports it).
@@ -17,13 +17,12 @@ const ST_LABEL = { und: 'Projects undertaken (excluding quotes)', all: 'All proj
 
 /* ---------- data ---------- */
 function cData(p) {
-  const c = calc(p), S = D.stages.filter(s => s.ProjectID === p.ID), t = S.reduce((a, s) => a + N(s.Weight), 0) || 1;
-  const stages = S.map(s => ({ name: s.Name, pct: Math.round(N(s.Weight) / t * 100), done: !!s.Done, date: s.DoneDate }));
+  const c = calc(p);
   const scope = (D.scope || []).filter(x => x.ProjectID === p.ID);
   const seen = {}, sum = [];
   scope.forEach(x => { const raw = String(x.Type || 'Other').trim() || 'Other', k = raw.toLowerCase(); if (!seen[k]) { seen[k] = { type: raw, qty: 0 }; sum.push(seen[k]); } seen[k].qty += N(x.Qty); });
   const pay = D.payments.filter(x => x.ProjectID === p.ID).slice().sort((a, b) => String(a.Date).localeCompare(String(b.Date)));
-  return { p, c, pr: prog(p), stages, scope, sum, pay };
+  return { p, c, pr: prog(p), scope, sum, pay };
 }
 
 function mData() {
@@ -70,8 +69,7 @@ function cHtml(d) {
   return `<div class="rpt">${rHead('Project Summary Report', 'Prepared ' + nowStr())}
 <h3>Project details</h3><div class="kv">${kv('Project', p.Name)}${kv('Client', p.Client)}${kv('Location', p.Location)}${kv('Project type', p.Type)}${kv('Project ID', p.ID)}${kv('Status', p.Status)}${kv('Start date', fdate(p.StartDate))}${kv('Target completion', fdate(p.EndDate))}</div>
 <h3>Progress</h3><div class="rprog"><div class="rbar"><i style="width:${d.pr}%"></i></div><b>${d.pr}% complete</b></div>
-${d.stages.length ? `<div class="wrap"><table><tr><th>Stage</th><th class="n">Share of project</th><th>Status</th></tr>${d.stages.map(s => `<tr><td>${esc(s.name)}</td><td class="n">${s.pct}%</td><td>${s.done ? `<span class="chip ok">Completed${s.date ? ' ' + esc(fdate(s.date)) : ''}</span>` : '<span class="chip neu">Pending</span>'}</td></tr>`).join('')}</table></div>` : ''}
-<h3>Scope of works</h3>${d.scope.length ? `<div class="chips">${d.sum.map(s => `<span class="tile"><small>${esc(s.type)}</small><b>${qtyS(s.qty)}</b></span>`).join('')}</div><div class="wrap"><table><tr><th>Item</th><th>Description</th><th class="n">Qty</th><th>Unit</th><th>Current stage</th></tr>${d.scope.map(x => `<tr><td>${esc(x.Type)}</td><td>${esc(x.Description)}</td><td class="n">${qtyS(N(x.Qty))}</td><td>${esc(x.Unit)}</td><td>${esc(stageName(x.StageID)) || '-'}</td></tr>`).join('')}</table></div>` : '<p class="muted">No scope items listed yet. Add them on the project page under Scope of works.</p>'}
+<h3>Scope of works</h3>${d.scope.length ? `<div class="chips">${d.sum.map(s => `<span class="tile"><small>${esc(s.type)}</small><b>${qtyS(s.qty)}</b></span>`).join('')}</div><div class="wrap"><table><tr><th>Item</th><th>Description</th><th class="n">Qty</th><th>Unit</th><th>Progress remarks</th></tr>${d.scope.map(x => `<tr><td>${esc(x.Type)}</td><td>${esc(x.Description)}</td><td class="n">${qtyS(N(x.Qty))}</td><td>${esc(x.Unit)}</td><td>${esc(x.Remarks) || '-'}</td></tr>`).join('')}</table></div>` : '<p class="muted">No scope items listed yet. Add them on the project page under Scope of works.</p>'}
 <h3>Payment summary</h3><div class="kv">${kv('Contract value', kes(c.q))}${kv('Total received', kes(c.rec))}${kv('Balance due', kes(c.bal))}${kv('Paid so far', c.q ? pct1(c.rec / c.q * 100) : '-')}</div>
 ${d.pay.length ? `<div class="wrap"><table><tr><th>Date</th><th>Reference</th><th class="n">Amount (KES)</th></tr>${d.pay.map(x => `<tr><td>${esc(fdate(x.Date))}</td><td>${esc(x.Reference)}</td><td class="n">${money(N(x.Amount))}</td></tr>`).join('')}<tr class="cat"><td colspan="2">Total received</td><td class="n">${money(c.rec)}</td></tr></table></div>` : '<p class="muted">No payments received yet.</p>'}
 <p class="muted" style="margin-top:18px">Figures are taken from Alisan Interior Builders Limited project records as at ${nowStr()}.</p></div>`;
@@ -186,13 +184,12 @@ async function cPdf(d) {
   H2(g, 'Progress');
   g.y += 4; T(g, d.pr + '% complete', g.M, g.y + 9, { b: 1, sz: 11 }); g.y += 16;
   rect(g, g.M, g.y, g.cw, 9, [230, 235, 239]); if (d.pr > 0) rect(g, g.M, g.y, g.cw * d.pr / 100, 9, [46, 158, 107]); g.y += 14;
-  if (d.stages.length) ptbl(g, { cols: [{ h: 'Stage', w: 55 }, { h: 'Share of project', w: 18, al: 'r' }, { h: 'Status', w: 27 }], rows: d.stages.map(s => [s.name, s.pct + '%', s.done ? { t: 'Completed' + (s.date ? ' ' + fdate(s.date) : ''), c: OKC, b: 1 } : { t: 'Pending', c: MUT }]) });
 
   H2(g, 'Scope of works');
   if (d.scope.length) {
     ptbl(g, { width: g.cw * 0.5, cols: [{ h: 'Item type', w: 70 }, { h: 'Total quantity', w: 30, al: 'r' }], rows: d.sum.map(s => [s.type, qtyS(s.qty)]) });
     g.y += 8;
-    ptbl(g, { cols: [{ h: 'Item', w: 17 }, { h: 'Description', w: 36 }, { h: 'Qty', w: 8, al: 'r' }, { h: 'Unit', w: 8 }, { h: 'Current stage', w: 31 }], rows: d.scope.map(x => [x.Type, x.Description, qtyS(N(x.Qty)), x.Unit, stageName(x.StageID) || '-']) });
+    ptbl(g, { cols: [{ h: 'Item', w: 17 }, { h: 'Description', w: 36 }, { h: 'Qty', w: 8, al: 'r' }, { h: 'Unit', w: 8 }, { h: 'Progress remarks', w: 31 }], rows: d.scope.map(x => [x.Type, x.Description, qtyS(N(x.Qty)), x.Unit, x.Remarks || '-']) });
   } else note(g, 'No scope items have been listed yet.');
 
   H2(g, 'Payment summary');
